@@ -1,0 +1,4 @@
+# 只保留py文件
+*
+!*.py
+!.gitignore
