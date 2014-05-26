@@ -42,8 +42,8 @@ class Html:
         
     def downloadFile(self, url):
         """下载url中的文件"""
-        self.makedirs(url)
         if not os.path.exists(self.filename(url)):
+            self.makedirs(url)
             urllib.urlretrieve(url, self.filename(url))
     
     def filename(self, url):
@@ -52,14 +52,14 @@ class Html:
         
     def htmlname(self, url):
         """Html文件名"""
-        return self.filename(url)
+        return self.filename(url) + '.html'
         
     def downloadHtml(self):
         """下载Html文件"""
-        self.makeHtmldirs(self.url)
+        self.makedirs(self.url)
         self.replace()
         with open(self.htmlname(self.url), 'wb') as f:
-            f.write(str(self.soup).replace('="http://www.liaoxuefeng.com/', '="../../'))
+            f.write(str(self.soup))
         
     def replace(self):
         """替换url"""
@@ -69,12 +69,12 @@ class Html:
             self.sub(tag, 'src')
         for tag in self.data_src():
             self.sub(tag, 'data-src')
-        # 修改 a href
-        for tag in self.soup(href=re.compile(r'http://www.liaoxuefeng.com/wiki/[^/]*$')):
-            tag['href'] += '/' + tag['href'].split('/')[-1]
+        # 修改 href
+        for tag in self.soup(href=re.compile(r'http://www.liaoxuefeng.com/wiki/')):
+            tag['href'] = self.mainPath() + tag['href'][27:] + '.html'
     
     def sub(self, tag, attr):
-        tag[attr] = re.compile(r'http://.*?/').sub('../../', tag[attr])
+        tag[attr] = re.compile(r'http://.*?/').sub(self.mainPath(), tag[attr])
         
     def makedirs(self, url):
         """创建目录"""
@@ -82,9 +82,12 @@ class Html:
         if p != '' and (not os.path.exists(p)):
             os.makedirs(p)
     
-    def makeHtmldirs(self, url):
-        """创建Html文件目录"""
-        self.makedirs(url)
+    def mainPath(self):
+        """根据url返回顶层路径"""
+        s = ''
+        for i in range(len(self.url.split('/')) - 4):
+            s += '../'
+        return s
 
     def path(self, url):
         return '/'.join(url.split('/')[3:-1])
@@ -101,26 +104,12 @@ class Htmls(Html):
     def downloadOther(self):
         """下载其他页面"""
         for url in self.links():
-            if not os.path.exists(self.filename(url)):
+            if not os.path.exists(self.htmlname(url)):
                 Html(url).download()
     
     def links(self):
         """查找其他链接"""
         return [tag['href'] for tag in self.soup.find(class_='x-wiki-tree')('a')]
-    
-    def htmlname(self, url):
-        s = url.split('/')
-        s = s[3:] + s[-1:]
-        return '/'.join(s)
-    
-    def makeHtmldirs(self, url):
-        """创建Html文件目录"""
-        p = self.htmlPath(url)
-        if p != '' and (not os.path.exists(p)):
-            os.makedirs(p)
-    
-    def htmlPath(self, url):
-        return '/'.join(url.split('/')[3:])    
     
 pythonUrl = 'http://www.liaoxuefeng.com/wiki/001374738125095c955c1e6d8bb493182103fac9270762a000'
 gitUrl = 'http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000'
