@@ -6,6 +6,24 @@ from pprint import pprint
 import re
 import os
 
+def filename(url):
+    """文件名"""
+    return '/'.join(url.split('/')[3:])
+
+def htmlname(url):
+    """Html文件名"""
+    return filename(url) + '.html'
+
+def makedirs(url):
+    """创建目录"""
+    p = path(url)
+    if p != '' and (not os.path.exists(p)):
+        os.makedirs(p)
+
+def path(url):
+    return '/'.join(url.split('/')[3:-1])
+
+
 class Html:
     """Html页面"""
     
@@ -13,7 +31,7 @@ class Html:
         self.url = url
         data = urllib.urlopen(url).read().replace('="//', '="http://')
         self.soup = BeautifulSoup(data.replace('="/', '="http://www.liaoxuefeng.com/'))      
-        
+
     def download(self):
         """下载页面"""
         self.downloadFiles()
@@ -42,23 +60,15 @@ class Html:
         
     def downloadFile(self, url):
         """下载url中的文件"""
-        if not os.path.exists(self.filename(url)):
-            self.makedirs(url)
-            urllib.urlretrieve(url, self.filename(url))
-    
-    def filename(self, url):
-        """文件名"""
-        return '/'.join(url.split('/')[3:])
-        
-    def htmlname(self, url):
-        """Html文件名"""
-        return self.filename(url) + '.html'
-        
+        if not os.path.exists(filename(url)):
+            makedirs(url)
+            urllib.urlretrieve(url, filename(url))
+
     def downloadHtml(self):
         """下载Html文件"""
-        self.makedirs(self.url)
+        makedirs(self.url)
         self.replace()
-        with open(self.htmlname(self.url), 'wb') as f:
+        with open(htmlname(self.url), 'wb') as f:
             f.write(str(self.soup))
         
     def replace(self):
@@ -75,12 +85,6 @@ class Html:
     
     def sub(self, tag, attr):
         tag[attr] = re.compile(r'http://.*?/').sub(self.mainPath(), tag[attr])
-        
-    def makedirs(self, url):
-        """创建目录"""
-        p = self.path(url)
-        if p != '' and (not os.path.exists(p)):
-            os.makedirs(p)
     
     def mainPath(self):
         """根据url返回顶层路径"""
@@ -89,9 +93,6 @@ class Html:
             s += '../'
         return s
 
-    def path(self, url):
-        return '/'.join(url.split('/')[3:-1])
-    
 class Htmls(Html):
     """Html主页面"""
     def __init__(self, url):
@@ -104,7 +105,7 @@ class Htmls(Html):
     def downloadOther(self):
         """下载其他页面"""
         for url in self.links():
-            if not os.path.exists(self.htmlname(url)):
+            if not os.path.exists(htmlname(url)):
                 Html(url).download()
     
     def links(self):
