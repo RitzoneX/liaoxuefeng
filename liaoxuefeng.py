@@ -8,7 +8,8 @@ import os
 
 def filename(url):
     """文件名"""
-    return '/'.join(url.split('/')[3:])
+    name = '/'.join(url.split('/')[3:])
+    return name if name[-1] != '/' else name[:-1]
 
 def htmlname(url):
     """Html文件名"""
@@ -16,6 +17,7 @@ def htmlname(url):
 
 def makedirs(url):
     """创建目录"""
+    url = url if url[-1] != '/' else url[:-1]
     p = path(url)
     if p != '' and (not os.path.exists(p)):
         os.makedirs(p)
@@ -84,6 +86,8 @@ class Html:
             tag['href'] = self.mainPath() + tag['href'][27:] + '.html'
     
     def sub(self, tag, attr):
+        if tag[attr][-1] == '/':
+            tag[attr] = tag[attr][:-1]
         tag[attr] = re.compile(r'http://.*?/').sub(self.mainPath(), tag[attr])
     
     def mainPath(self):
