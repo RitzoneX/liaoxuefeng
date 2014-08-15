@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import urllib
+import urllib, urllib2
 from bs4 import BeautifulSoup
 from pprint import pprint
 import re
@@ -31,7 +31,10 @@ class Html:
     
     def __init__(self, url):
         self.url = url
-        data = urllib.urlopen(url).read().replace('="//', '="http://')
+        request = urllib2.Request(url) 
+        request.add_header('Accept-Language', 'zh-CN,zh;q=0.8') 
+        data = urllib2.urlopen(request).read().replace('="//', '="http://')
+        # data = urllib.urlopen(url).read().replace('="//', '="http://')
         self.soup = BeautifulSoup(data.replace('="/', '="http://www.liaoxuefeng.com/'))      
 
     def download(self):
